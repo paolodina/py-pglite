@@ -199,6 +199,14 @@ class PGliteManager:
         self, ext_requires_str: str, extensions_obj_str: str
     ) -> str:
         """Generate JavaScript content for TCP socket mode."""
+        pglite_options = [f"extensions: {extensions_obj_str}"]
+        if self.config.work_dir:
+            data_dir_path = self.config.work_dir / "pgdata"
+            js_safe_path = str(data_dir_path).replace("\\", "/")
+            pglite_options.append(f"dataDir: '{js_safe_path}'")
+
+        pglite_options_str = ",\n                        ".join(pglite_options)
+
         return dedent(f"""
             const {{ PGlite }} = require('@electric-sql/pglite');
             const {{ PGLiteSocketServer }} = require('@electric-sql/pglite-socket');
@@ -210,7 +218,7 @@ class PGliteManager:
                 try {{
                     // Create a PGlite instance with extensions
                     const db = new PGlite({{
-                        extensions: {extensions_obj_str}
+                        {pglite_options_str}
                     }});
 
                     // Create and start a TCP server
